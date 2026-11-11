@@ -264,6 +264,10 @@ class NewsFeed:
         # accent line
         tk.Frame(self, bg=ACCENT, width=62, height=3).pack(anchor='w', pady=(10, 10))
 
+        # subtitle
+        self.subtitle = ttk.Label(self, text=subtitle, style="PanelSubtitle.TLabel", wraplength=420)
+        self.subtitle.pack(anchor='w', pady=(0, 10))
+
 
 if __name__ == "__main__":
 
