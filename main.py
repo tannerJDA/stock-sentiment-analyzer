@@ -6,7 +6,7 @@ import yfinance as yf
 import threading
 from datetime import date, timedelta
 
-
+import sent_analysis
 import get_data
 
 # colors
@@ -100,11 +100,7 @@ class DashboardScreen:
 
         # get sectory news
         self.sector_news, self.sector_category = get_data.gather_sector_news(self.ticker)
-        self.company_news = []
-
-        # get company news
-        
-        self.company_news = get_data.gather_headlines.gather(ticker, date.today()-timedelta(days=30))
+        self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=30))
 
 
         # overall frame
@@ -168,14 +164,14 @@ class DashboardScreen:
         self.content_frame.rowconfigure(0, weight=1)
 
         # panel for company news
-        self.company_news_panel = NewsPanel(self.content_frame, "Company News", self.long_name)
+        self.company_news_panel = NewsPanel(self.content_frame, "Company News", self.long_name, self.company_news)
         self.company_news_panel.grid(row=0, column=0)
-        self.company_news_panel.set_articles(self.company_news)
+        #self.company_news_panel.set_articles(self.company_news)
 
         # panel for sector news
-        self.sector_news_panel = NewsPanel(self.content_frame, "Sector News", self.sector_category)
+        self.sector_news_panel = NewsPanel(self.content_frame, "Sector News", self.sector_category, self.sector_news)
         self.sector_news_panel.grid(row=0, column=1)
-        self.sector_news_panel.set_articles(self.sector_news)
+        #self.sector_news_panel.set_articles(self.sector_news)
     
 
     def update_dashboard(self):
@@ -228,10 +224,10 @@ class WelcomeScreen:
 
 
 class NewsPanel(ttk.Frame):
-    def __init__(self, parent, title, subtitle):
+    def __init__(self, parent, title, subtitle, articles):
         super().__init__(parent, style="Card.TFrame", padding=(22, 20))
 
-        self.articles = []
+        self.articles = articles
 
         # title label
         self.title = ttk.Label(self, text=title, style="PanelTitle.TLabel")
@@ -256,11 +252,145 @@ class NewsPanel(ttk.Frame):
                                     bottom=0.02,
                                     top=0.98)
 
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self)
+        self.canvas.get_tk_widget().configure(bg=CARD, highlightthickness=0)
+        self.canvas.get_tk_widget().pack(fill="x", pady=(2, 0))
+
+
+        self.textbox_frame = HeadlinesTextBox(parent=self)
+        self.textbox_frame.pack(anchor='w')
+
+        self.update_newsfeed()
+
 
 
     def set_articles(self, articles):
         self.articles = articles
 
+    def update_newsfeed(self):
+
+        print('update newsfeed')
+        print(f'Articles: {self.articles}')
+        
+        # run sent scan and update pie chart based on articles that have been set
+        res, pos, neg, neu = self.run_sent_scan(self.articles)
+
+        self.textbox_frame.update_text(res)
+
+        self.ax.pie(
+            [pos, neg, neu],
+            labels=['Positive', 'Negative', 'Neutral'],
+            explode=(0, 0, 0),
+            shadow=True,
+            colors=["#19A514", "#e70b0b", "#757171"],
+            wedgeprops={"width": 0.45, "edgecolor": CARD,
+                        "linewidth": 3}
+        )
+
+        self.canvas.draw()
+
+    
+    def run_sent_scan(self, articles):
+
+        #news_results = get_data.gather_headlines.gather(ticker, date.today()-timedelta(days=30))
+        results = []
+        positives = 0
+        negatives = 0
+        neutrals = 0
+
+
+        # step 2 - parse through all news results and analyze sentiment
+        for res in articles:
+            #print(res["headline"])
+
+            sent = sent_analysis.sent(res['headline'])
+
+            if sent == 'Positive':
+                positives += 1
+            elif sent == 'Negative':
+                negatives += 1
+            elif sent == 'Neutral':
+                neutrals += 1
+
+            results.append({
+                'Headline': res['headline'],
+                'Sentiment': sent
+            })
+
+
+        #pie_chart.update([positives, negatives, neutrals])
+        return results, positives, negatives, neutrals
+
+
+# textbox object that inherits from ttk Frame
+class HeadlinesTextBox(ttk.Frame):
+
+    def __init__ (self, parent, **kwargs):
+        super().__init__(parent)
+
+        # create scrollbar
+        self.scrollbar = ttk.Scrollbar(self, orient='vertical')
+        self.scrollbar.pack(side='right', fill='y')
+
+        # actual text box
+        self.textbox = tk.Text(
+            self,
+            wrap='word',
+            yscrollcommand=self.scrollbar.set,
+            **kwargs
+        )
+        self.textbox.pack(side='left', fill='both', expand=True)
+
+        # connect scrollbar
+        self.scrollbar.config(command=self.textbox.yview)
+
+    def clear(self):
+        # remove all text
+        self.textbox.config(state='normal') # enable textbox so it can be editted
+        self.textbox.delete("1.0", tk.END) # delete everything from start to finish
+
+    def update_text(self, data):
+
+        self.clear()
+
+        self.textbox.tag_config("positive", foreground='green')
+        self.textbox.tag_config("negative", foreground='red')
+
+        for d in data:
+
+
+            # write sentiment label
+            if d['Sentiment'] == 'Positive':
+
+                self.textbox.insert(
+                    tk.END,
+                    '[Positive]',
+                    'positive'
+                )
+
+            elif d['Sentiment'] == 'Negative':
+
+                self.textbox.insert(
+                    tk.END,
+                    '[Negative]',
+                    'negative'
+                )
+
+            else:
+
+                self.textbox.insert(
+                    tk.END,
+                    '[Neutral]'
+                )
+
+            # write headline text
+            self.textbox.insert(
+                tk.END,
+                f'{d['Headline']}\n\n'
+            )
+
+        self.textbox.config(state='disabled')
+        self.textbox.yview_moveto(0) # reset scrollbar position
 
 
 if __name__ == "__main__":
