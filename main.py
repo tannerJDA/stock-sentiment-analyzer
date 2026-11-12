@@ -4,6 +4,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import yfinance as yf
 import threading
+from datetime import date, timedelta
+
 
 import get_data
 
@@ -49,64 +51,45 @@ class Application:
         self.dashboard_screen = DashboardScreen(self.root, ticker=ticker)
 
     def configure_styles(self):
+        s = self.style
+        s.configure("Background.TFrame", background=BG)
+        s.configure("Card.TFrame", background=CARD)
+        s.configure("Title.TLabel", background=BG, foreground=TEXT,
+                    font=("Segoe UI", 30, "bold"))
+        s.configure("Description.TLabel", background=BG, foreground=MUTED,
+                    font=("Segoe UI", 12))
+        s.configure("Subtitle.TLabel", background=BG, foreground=MUTED,
+                    font=("Segoe UI", 10))
 
-        self.style.configure("Card.TFrame", background=CARD)
+        s.configure("PanelTitle.TLabel", background=CARD, foreground=TEXT,
+                    font=("Segoe UI", 20, "bold"))
+        s.configure("PanelSubtitle.TLabel", background=CARD, foreground=MUTED,
+                    font=("Segoe UI", 11))
+        s.configure("Section.TLabel", background=CARD, foreground=TEXT,
+                    font=("Segoe UI", 12, "bold"))
+        s.configure("SmallCard.TLabel", background=CARD, foreground=MUTED,
+                    font=("Segoe UI", 9))
+        s.configure("Toolbar.TLabel", background=CARD, foreground=TEXT,
+                    font=("Segoe UI", 10, "bold"))
+        s.configure("Status.TLabel", background=BG, foreground=MUTED,
+                    font=("Segoe UI", 9))
 
-        # Main background
-        self.style.configure(
-            "Background.TFrame",
-            background="#F3F5F8"
-        )
+        s.configure("Search.TEntry", padding=9, fieldbackground=CARD,
+                    foreground=TEXT, bordercolor=BORDER, lightcolor=BORDER,
+                    darkcolor=BORDER)
+        s.configure("Range.TCombobox", padding=8, fieldbackground=CARD,
+                    background=CARD, foreground=TEXT, bordercolor=BORDER,
+                    lightcolor=BORDER, darkcolor=BORDER)
 
-        # Main title
-        self.style.configure(
-            "Title.TLabel",
-            background="#F3F5F8",
-            foreground="#253247",
-            font=("Segoe UI", 30, "bold")
-        )
-
-        # Description
-        self.style.configure(
-            "Description.TLabel",
-            background="#F3F5F8",
-            foreground="#64748B",
-            font=("Segoe UI", 12)
-        )
-
-        # Example tickers
-        self.style.configure(
-            "Subtitle.TLabel",
-            background="#F3F5F8",
-            foreground="#64748B",
-            font=("Segoe UI", 10)
-        )
-
-        # Search entry
-        self.style.configure(
-            "Search.TEntry",
-            padding=12,
-            font=("Segoe UI", 13)
-        )
-
-        # Orange action button
-        self.style.configure(
-            "Accent.TButton",
-            font=("Segoe UI", 12, "bold"),
-            padding=(22, 12),
-            background="#C7752B",
-            foreground="#FFFFFF",
-            borderwidth=0
-        )
-
-        # Hover and pressed button colors
-        self.style.map(
-            "Accent.TButton",
-            background=[
-                ("active", "#A85E20"),
-                ("pressed", "#8F4C17")
-            ]
-        )
+        s.configure("Accent.TButton", font=("Segoe UI", 10, "bold"),
+                    padding=(19, 10), background=ACCENT,
+                    foreground="white", borderwidth=0)
+        s.map("Accent.TButton", background=[("active", ACCENT_HOVER),
+                                           ("pressed", "#8F4C17")])
+        s.configure("Secondary.TButton", font=("Segoe UI", 10, "bold"),
+                    padding=(16, 10), background=CARD, foreground=TEXT,
+                    borderwidth=1, bordercolor=BORDER)
+        s.map("Secondary.TButton", background=[("active", SOFT)])
 
 
 class DashboardScreen:
@@ -117,6 +100,12 @@ class DashboardScreen:
 
         # get sectory news
         self.sector_news, self.sector_category = get_data.gather_sector_news(self.ticker)
+        self.company_news = []
+
+        # get company news
+        
+        self.company_news = get_data.gather_headlines.gather(ticker, date.today()-timedelta(days=30))
+
 
         # overall frame
         self.main_frame = ttk.Frame(self.root, style="Background.TFrame")
@@ -166,7 +155,6 @@ class DashboardScreen:
 
         #self.enter_but.grid(row=0, column=2, padx=5, pady=5, sticky="")
         self.enter_but.pack(side='left', padx=(0, 11))
-
         # ========
 
         # content frame will be split in two -> company frame, sector frame
@@ -178,29 +166,17 @@ class DashboardScreen:
         self.content_frame.columnconfigure(0, weight=1, uniform='panels')
         self.content_frame.columnconfigure(1, weight=1, uniform='panels')
         self.content_frame.rowconfigure(0, weight=1)
-        '''
 
-        # frame for company info and sentiments
-        self.company_info_frame = ttk.Frame(self.content_frame, style="Background.TFrame")
-        self.company_info_frame.grid(row=0, column=0)
+        # panel for company news
+        self.company_news_panel = NewsPanel(self.content_frame, "Company News", self.long_name)
+        self.company_news_panel.grid(row=0, column=0)
+        self.company_news_panel.set_articles(self.company_news)
 
-        # frame for sector info and sentiments
-        self.sector_info_frame = ttk.Frame(self.content_frame, style="Background.TFrame")
-        self.sector_info_frame.grid(row=0, column=1)
-
-        self.company_top_lbl = ttk.Label(self.company_info_frame, text="Company News")
-        self.company_top_lbl.pack(side='top')
-
-        self.company_sub_lbl = ttk.Label(self.company_info_frame, text=self.long_name)
-        self.company_sub_lbl.pack(side='top')
-
-        self.sector_top_lbl = ttk.Label(self.sector_info_frame, text="Sector News")
-        self.sector_top_lbl.pack(side='top')
-
-        self.sector_sub_lbl = ttk.Label(self.sector_info_frame, text=self.sector_category)
-        self.sector_sub_lbl.pack(side='top')'''
-
-
+        # panel for sector news
+        self.sector_news_panel = NewsPanel(self.content_frame, "Sector News", self.sector_category)
+        self.sector_news_panel.grid(row=0, column=1)
+        self.sector_news_panel.set_articles(self.sector_news)
+    
 
     def update_dashboard(self):
         print('Update dashboard func')
@@ -251,7 +227,7 @@ class WelcomeScreen:
         self.on_submit(ticker)
 
 
-class NewsFeed:
+class NewsPanel(ttk.Frame):
     def __init__(self, parent, title, subtitle):
         super().__init__(parent, style="Card.TFrame", padding=(22, 20))
 
@@ -267,6 +243,24 @@ class NewsFeed:
         # subtitle
         self.subtitle = ttk.Label(self, text=subtitle, style="PanelSubtitle.TLabel", wraplength=420)
         self.subtitle.pack(anchor='w', pady=(0, 10))
+
+        # pie chart 
+        self.figure = Figure(figsize=(4.3, 2.85), # set the figures initial size, in inches
+                             dpi=100, 
+                             facecolor=CARD)
+        self.ax = self.figure.add_subplot(111) # create space for 1 plot
+
+        # position the plot within a few units of each edge so it occupies all of its given space
+        self.figure.subplots_adjust(left=0.03,
+                                    right=0.97,
+                                    bottom=0.02,
+                                    top=0.98)
+
+
+
+    def set_articles(self, articles):
+        self.articles = articles
+
 
 
 if __name__ == "__main__":
