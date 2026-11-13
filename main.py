@@ -28,8 +28,10 @@ NEUTRAL = "#A8B3C1"
 class Application:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("700x200")
-        self.root.minsize(800, 500)
+        self.root.geometry("1100x760")
+        self.root.minsize(880, 600)
+        self.root.configure(bg=BG)
+
 
         self.root.configure(bg="#F3F5F8")
         # Configure ttk styles
@@ -55,24 +57,24 @@ class Application:
         s.configure("Background.TFrame", background=BG)
         s.configure("Card.TFrame", background=CARD)
         s.configure("Title.TLabel", background=BG, foreground=TEXT,
-                    font=("Segoe UI", 30, "bold"))
+                    font=("Helvetica", 30, "bold"))
         s.configure("Description.TLabel", background=BG, foreground=MUTED,
-                    font=("Segoe UI", 12))
+                    font=("Helvetica", 12))
         s.configure("Subtitle.TLabel", background=BG, foreground=MUTED,
-                    font=("Segoe UI", 10))
+                    font=("Helvetica", 10))
 
         s.configure("PanelTitle.TLabel", background=CARD, foreground=TEXT,
-                    font=("Segoe UI", 20, "bold"))
+                    font=("Helvetica", 20, "bold"))
         s.configure("PanelSubtitle.TLabel", background=CARD, foreground=MUTED,
-                    font=("Segoe UI", 11))
+                    font=("Helvetica", 11))
         s.configure("Section.TLabel", background=CARD, foreground=TEXT,
-                    font=("Segoe UI", 12, "bold"))
+                    font=("Helvetica", 12, "bold"))
         s.configure("SmallCard.TLabel", background=CARD, foreground=MUTED,
-                    font=("Segoe UI", 9))
+                    font=("Helvetica", 9))
         s.configure("Toolbar.TLabel", background=CARD, foreground=TEXT,
-                    font=("Segoe UI", 10, "bold"))
+                    font=("Helvetica", 10, "bold"))
         s.configure("Status.TLabel", background=BG, foreground=MUTED,
-                    font=("Segoe UI", 9))
+                    font=("Helvetica", 9))
 
         s.configure("Search.TEntry", padding=9, fieldbackground=CARD,
                     foreground=TEXT, bordercolor=BORDER, lightcolor=BORDER,
@@ -81,12 +83,12 @@ class Application:
                     background=CARD, foreground=TEXT, bordercolor=BORDER,
                     lightcolor=BORDER, darkcolor=BORDER)
 
-        s.configure("Accent.TButton", font=("Segoe UI", 10, "bold"),
+        s.configure("Accent.TButton", font=("Helvetica", 10, "bold"),
                     padding=(19, 10), background=ACCENT,
                     foreground="white", borderwidth=0)
         s.map("Accent.TButton", background=[("active", ACCENT_HOVER),
                                            ("pressed", "#8F4C17")])
-        s.configure("Secondary.TButton", font=("Segoe UI", 10, "bold"),
+        s.configure("Secondary.TButton", font=("Helvetica", 10, "bold"),
                     padding=(16, 10), background=CARD, foreground=TEXT,
                     borderwidth=1, bordercolor=BORDER)
         s.map("Secondary.TButton", background=[("active", SOFT)])
@@ -106,6 +108,11 @@ class DashboardScreen:
         # overall frame
         self.main_frame = ttk.Frame(self.root, style="Background.TFrame")
         self.main_frame.pack(expand=True, fill='both')
+
+        # set row and col weights
+        self.main_frame.columnconfigure(0, weight=1)
+        self.main_frame.rowconfigure(0, weight=0)
+        self.main_frame.rowconfigure(1, weight=1)
 
         # input frame for labels
         self.input_frame = ttk.Frame(self.main_frame, style="Card.TFrame", padding=(22, 16))
@@ -134,7 +141,7 @@ class DashboardScreen:
         self.date_range_but.pack(side='left', padx=(0, 22))
 
         # ticker entry box
-        self.ticker_entry = ttk.Entry(self.controls, width=9, style="Search.TEntry", font=("Segoe UI", 11))
+        self.ticker_entry = ttk.Entry(self.controls, width=9, style="Search.TEntry", font=("Helvetica", 11))
         #self.ticker_entry.grid(row=0, column=1, padx=5, pady=5, sticky="")
         self.ticker_entry.pack(side="left", padx=(0, 11))
 
@@ -156,7 +163,7 @@ class DashboardScreen:
         # content frame will be split in two -> company frame, sector frame
         self.content_frame = ttk.Frame(self.main_frame, style="Background.TFrame")
         #self.content_frame.pack(fill='x')
-        self.content_frame.grid(row=1, column=0, padx=24, pady=(0, 7), sticky='nsew')
+        self.content_frame.grid(row=1, column=0, padx=18, pady=(0, 18), sticky='nsew')
 
         # set up orientation for the two columns to be evenly spaced
         self.content_frame.columnconfigure(0, weight=1, uniform='panels')
@@ -165,12 +172,12 @@ class DashboardScreen:
 
         # panel for company news
         self.company_news_panel = NewsPanel(self.content_frame, "Company News", self.long_name, self.company_news)
-        self.company_news_panel.grid(row=0, column=0)
+        self.company_news_panel.grid(row=0, column=0, sticky='nsew', padx=(0, 7))
         #self.company_news_panel.set_articles(self.company_news)
 
         # panel for sector news
         self.sector_news_panel = NewsPanel(self.content_frame, "Sector News", self.sector_category, self.sector_news)
-        self.sector_news_panel.grid(row=0, column=1)
+        self.sector_news_panel.grid(row=0, column=1, sticky='nsew', padx=(7, 0))
         #self.sector_news_panel.set_articles(self.sector_news)
     
 
@@ -241,7 +248,7 @@ class NewsPanel(ttk.Frame):
         self.subtitle.pack(anchor='w', pady=(0, 10))
 
         # pie chart 
-        self.figure = Figure(figsize=(4.3, 2.85), # set the figures initial size, in inches
+        self.figure = Figure(figsize=(3.2, 2.1), # set the figures initial size, in inches
                              dpi=100, 
                              facecolor=CARD)
         self.ax = self.figure.add_subplot(111) # create space for 1 plot
@@ -254,11 +261,18 @@ class NewsPanel(ttk.Frame):
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self)
         self.canvas.get_tk_widget().configure(bg=CARD, highlightthickness=0)
-        self.canvas.get_tk_widget().pack(fill="x", pady=(2, 0))
+        self.canvas.get_tk_widget().pack(fill="x", pady=(0, 5))
 
+        ttk.Label(self, text="RECENT HEADLINES", style="Section.TLabel").pack(
+                fill='x', anchor="w", pady=(5, 8)
+        )
 
         self.textbox_frame = HeadlinesTextBox(parent=self)
-        self.textbox_frame.pack(anchor='w')
+        self.textbox_frame.pack(
+            fill="both",
+            expand=True,
+            pady=(10, 0)
+        )
 
         self.update_newsfeed()
 
@@ -269,8 +283,8 @@ class NewsPanel(ttk.Frame):
 
     def update_newsfeed(self):
 
-        print('update newsfeed')
-        print(f'Articles: {self.articles}')
+        #print('update newsfeed')
+        #print(f'Articles: {self.articles}')
         
         # run sent scan and update pie chart based on articles that have been set
         res, pos, neg, neu = self.run_sent_scan(self.articles)
@@ -328,18 +342,78 @@ class HeadlinesTextBox(ttk.Frame):
     def __init__ (self, parent, **kwargs):
         super().__init__(parent)
 
-        # create scrollbar
-        self.scrollbar = ttk.Scrollbar(self, orient='vertical')
-        self.scrollbar.pack(side='right', fill='y')
+        # Allow the textbox's grid cell to expand
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
         # actual text box
         self.textbox = tk.Text(
             self,
             wrap='word',
-            yscrollcommand=self.scrollbar.set,
+            width=1,
+            height=8,
+            yscrollcommand=lambda first, last: self.scrollbar.set(first, last),
+            bg=SOFT,
+            fg=TEXT,
+            font=("Helvetica", 10),
+            relief='flat',
+            #borderwidth=0,
+            highlightthickness=1,
+            highlightbackground=BORDER,
+            highlightcolor=BORDER,
+            #padx=13, pady=11, spacing1=1, spacing2=3, spacing3=0,
+            cursor="arrow",
+            takefocus=0,
             **kwargs
         )
-        self.textbox.pack(side='left', fill='both', expand=True)
+
+        '''
+        self.textbox = tk.Text(
+                            self,
+                            yscrollcommand=lambda first, last: self.scrollbar.set(first, last),
+                            bg="white",
+                            fg="black",
+                            font=("Helvetica", 11),
+                            wrap="word",
+                            height=12,
+                            width=50
+                        )
+        '''
+        
+        #self.textbox.grid(row=0, column=0, sticky="nsew")
+        self.textbox.grid(
+            row=0,
+            column=0,
+            sticky="nsew"
+        )
+
+        # create scrollbar
+        
+        self.scrollbar = ttk.Scrollbar(self, 
+                                        orient='vertical',
+                                        command=self.textbox.yview)
+        
+        self.scrollbar.grid(row=0, column=1, sticky="ns")
+
+        
+        # === text style configurations
+        self.textbox.tag_configure("positive", foreground=POSITIVE,
+                                    font=("Helvetica", 9, "bold"))
+        
+        self.textbox.tag_configure("negative", foreground=NEGATIVE,
+                                    font=("Helvetica", 9, "bold"))
+        
+        self.textbox.tag_configure("neutral", foreground=MUTED,
+                                    font=("Helvetica", 9, "bold"))
+        
+        self.textbox.tag_configure("headline", foreground=TEXT,
+                                    font=("Helvetica", 10),
+                                    lmargin1=0, lmargin2=0)
+        
+        
+        self.textbox.tag_configure("divider", foreground=BORDER,
+                                    font=("Helvetica", 8))
+        
 
         # connect scrollbar
         self.scrollbar.config(command=self.textbox.yview)
@@ -353,9 +427,24 @@ class HeadlinesTextBox(ttk.Frame):
 
         self.clear()
 
-        self.textbox.tag_config("positive", foreground='green')
-        self.textbox.tag_config("negative", foreground='red')
+        # if no data is returned
+        if not data:
+            self.textbox.insert("end",
+                                "No headlines found for this selection",
+                                "headline")
 
+        else:
+            for idx, itm in enumerate(data):
+                sent = itm.get("Sentiment", "Neutral") # get sent, return neutral as default if none
+
+                self.textbox.insert("end", f"{sent.upper()}\n", sent.lower())
+                self.textbox.insert("end", f'{itm.get("Headline", "")}\n')
+
+                # not at end
+                if idx < len(data) - 1:
+                    self.textbox.insert("end", "--------------------------------\n\n", "divider")
+
+        '''
         for d in data:
 
 
@@ -388,10 +477,26 @@ class HeadlinesTextBox(ttk.Frame):
                 tk.END,
                 f'{d['Headline']}\n\n'
             )
-
+        '''
         self.textbox.config(state='disabled')
         self.textbox.yview_moveto(0) # reset scrollbar position
 
+        # Schedule a redraw after the current event finishes
+        self.textbox.after_idle(self.refresh_textbox)
+
+    def refresh_textbox(self):
+        if not self.textbox.winfo_exists():
+            return
+
+        self.textbox.update_idletasks()
+
+        # Temporarily adjust the widget's dimensions
+        # to trigger a layout/redraw.
+        width = self.textbox.cget("width")
+
+        self.textbox.configure(width=width + 1)
+        self.textbox.update_idletasks()
+        self.textbox.configure(width=width)
 
 if __name__ == "__main__":
 
