@@ -147,6 +147,7 @@ class DashboardScreen:
 
         self.ticker_entry.focus_set() # set focus on text box
         self.ticker_entry.bind("<Return>", lambda e: self.update_dashboard()) # bind to enter button
+        self.ticker_entry.insert(0, (self.ticker).upper())
 
         # enter button
         self.enter_but = ttk.Button(
@@ -194,24 +195,27 @@ class WelcomeScreen:
         self.main_frame = ttk.Frame(self.root, style="Background.TFrame")
         self.main_frame.pack(expand=True, fill='both')
 
+        self.content_frame = ttk.Frame(self.main_frame, style="Background.TFrame")
+        self.content_frame.place(relx=0.5, rely=0.46, anchor='center')
+        '''
         self.upper_frame = ttk.Frame(self.main_frame, style="Background.TFrame")
         self.upper_frame.pack(fill='x')
+        '''
+        self.top_lbl = ttk.Label(self.content_frame, text="Stock Sentiment Analyzer", style="Title.TLabel")
+        self.top_lbl.pack(pady=(0, 14))
 
-        self.top_lbl = ttk.Label(self.upper_frame, text="Stock Sentiment Analyzer", style="Title.TLabel")
-        self.top_lbl.pack()
-
-        self.desc_lbl = ttk.Label(self.upper_frame, style="Description.TLabel", justify="center", text="Enter a stock ticker to analyze recent headlines, sentiment distribution, and price performance")
+        self.desc_lbl = ttk.Label(self.content_frame, style="Description.TLabel", justify="center", text="Enter a stock ticker to analyze recent headlines, sentiment distribution, and price performance")
         self.desc_lbl.pack()
 
-        self.input_frame = ttk.Frame(self.main_frame, style="Background.TFrame")
-        self.input_frame.pack(side="top")
+        self.input_frame = ttk.Frame(self.content_frame, style="Background.TFrame")
+        self.input_frame.pack()
 
-        self.user_in = ttk.Entry(self.input_frame, style="Search.TEntry")
-        self.user_in.grid(row=0, column=0, padx=5, pady=5)
+        self.user_in = ttk.Entry(self.input_frame, style="Search.TEntry", font=("Helvetica", 11))
+        self.user_in.grid(row=0, column=0, padx=(0, 9))
 
         self.user_in.focus_set()
 
-        self.enter_but = ttk.Button(self.input_frame, text="Enter!", command=self.run_main_prog)
+        self.enter_but = ttk.Button(self.input_frame, text="Enter!", command=self.run_main_prog, style="Accent.TButton")
         self.enter_but.grid(row=0, column=1, padx=5, pady=5)
 
         # bind button to enter
