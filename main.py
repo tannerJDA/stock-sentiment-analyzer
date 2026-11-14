@@ -186,6 +186,35 @@ class DashboardScreen:
         print('Update dashboard func')
         #print(f"time span: {self.date_range_but.get()}")
 
+        # get button input
+        user_in = self.ticker_entry.get()
+
+        print("Previous ticker:", self.ticker)
+        print("New ticker:", user_in)
+
+        self.ticker = user_in
+
+        self.sector_news, self.sector_category = get_data.gather_sector_news(self.ticker)
+        self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=30))
+
+        print("Company articles:", len(self.company_news))
+        print("Sector articles:", len(self.sector_news))
+
+        if self.company_news:
+            print("First company headline:", self.company_news[0]["headline"])
+    
+        # update company news panel
+        self.company_news_panel.set_articles(self.company_news)
+        self.company_news_panel.update_newsfeed()
+        self.company_news_panel.set_subtitle(yf.Ticker(self.ticker).info.get("longName"))
+
+        # update sector news panel
+        self.sector_news_panel.set_articles(self.sector_news)
+        self.sector_news_panel.update_newsfeed()
+        self.sector_news_panel.set_subtitle(self.sector_category)
+
+
+
 
 class WelcomeScreen:
     def __init__(self, root, on_submit):
@@ -285,10 +314,20 @@ class NewsPanel(ttk.Frame):
     def set_articles(self, articles):
         self.articles = articles
 
+    def set_ticker(self, ticker):
+        self.ticker = ticker
+
+    def set_title(self, title):
+        self.subtitle.configure(text=title)
+
+    def set_subtitle(self, subtitle):
+        self.subtitle.configure(text=subtitle)
+
     def update_newsfeed(self):
 
         #print('update newsfeed')
         #print(f'Articles: {self.articles}')
+        self.ax.clear()
         
         # run sent scan and update pie chart based on articles that have been set
         res, pos, neg, neu = self.run_sent_scan(self.articles)
