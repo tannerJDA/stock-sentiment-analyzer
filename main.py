@@ -194,14 +194,18 @@ class DashboardScreen:
 
         self.ticker = user_in
 
-        self.sector_news, self.sector_category = get_data.gather_sector_news(self.ticker)
+        _, self.sector_category = get_data.gather_sector_news(self.ticker) 
         self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=30))
+        self.sector_news = get_data.google_news_feed(self.sector_category)
 
         print("Company articles:", len(self.company_news))
         print("Sector articles:", len(self.sector_news))
 
         if self.company_news:
             print("First company headline:", self.company_news[0]["headline"])
+
+        if self.sector_news:
+            print("First sector headline:", self.sector_news[0]["headline"])
     
         # update company news panel
         self.company_news_panel.set_articles(self.company_news)
@@ -332,6 +336,8 @@ class NewsPanel(ttk.Frame):
         # run sent scan and update pie chart based on articles that have been set
         res, pos, neg, neu = self.run_sent_scan(self.articles)
 
+        print(f'Positve Articles: {pos}\tNegative Articles: {neg}')
+
         self.textbox_frame.update_text(res)
 
         self.ax.pie(
@@ -344,7 +350,7 @@ class NewsPanel(ttk.Frame):
                         "linewidth": 3}
         )
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     
     def run_sent_scan(self, articles):

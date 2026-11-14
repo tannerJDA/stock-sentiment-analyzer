@@ -34,7 +34,7 @@ def gather_sector_news(ticker):
 
 
 
-
+# -=-=-=- DOES NOT WORK -=-=-=-
 def get_gdelt_news(ticker):
     gdelt_url = "https://api.gdeltproject.org/api/v2/doc/doc"
     params = {
@@ -68,11 +68,43 @@ def get_gdelt_news(ticker):
         print(f"{a}\n------\n")
 
 
-
+# returns google news feed results based on query
+#
+# this function is used for sector wide news on the dashboard
+# and combines multiple different querys for more results
 def google_news_feed(query):
 
-    query = query + " when:30d"
-    # translate raw query into url safe string
+    #query = query + " industry news" + " when:30d"
+
+    time_span = "when:30d"
+
+    query_list = [
+        f"{query} industry news {time_span}",
+        f"{query} stocks {time_span}",
+        f"{query} {time_span}"
+    ]
+
+    results = []
+
+    for q in query_list:
+        url = (
+            "https://news.google.com/rss/search"
+            f"?q={quote_plus(q)}"
+            "&hl=en-US&gl=US&ceid=US:en"
+        )
+
+        feed = feedparser.parse(url)
+
+        for article in feed.entries:
+            results.append({
+                "headline": article.title,
+                "url": article.link,
+                "published": article.get("published"),
+                "source": article.get("source", {}).get("title", "")
+            })
+        
+
+    '''# translate raw query into url safe string
     encoded_query = quote_plus(query)
 
     url = (
@@ -83,7 +115,7 @@ def google_news_feed(query):
 
     feed = feedparser.parse(url)
 
-    results = []
+    
 
     for article in feed.entries:
         results.append({
@@ -91,23 +123,18 @@ def google_news_feed(query):
             "url": article.link,
             "published": article.get("published"),
             "source": article.get("source", {}).get("title", "")
-        })
+        })'''
 
+    results = parse_article_results(results) # remove duplicate results
     return results
 
-'''news = google_news_feed("aapl")
-for n in news:
-    print(f"{n}\n------\n")
-'''
-'''
-#print (gather('AAPL', date(year=2026, month=11, day=1)))
 
-news, sec = gather_sector_news('aapl')
+# take in a list of article results in remove duplicates
+def parse_article_results(articles):
 
-for n in news:
+    results = []
+    for art in articles:
+        if art not in results:
+            results.append(art)
 
-    if n['category'].lower() == sec.lower():
-        print(n)
-        print('------\n')
-'''
-
+    return results
