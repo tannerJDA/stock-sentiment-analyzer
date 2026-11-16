@@ -101,9 +101,9 @@ class DashboardScreen:
         self.long_name = yf.Ticker(ticker).info.get("longName")
 
         # get sectory news
-        self.sector_news, self.sector_category = get_data.gather_sector_news(self.ticker)
+        _, self.sector_category = get_data.gather_sector_news(self.ticker)
         self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=30))
-
+        self.sector_news = get_data.google_news_feed(self.sector_category, '30d')
 
         # overall frame
         self.main_frame = ttk.Frame(self.root, style="Background.TFrame")
@@ -189,14 +189,19 @@ class DashboardScreen:
         # get button input
         user_in = self.ticker_entry.get()
 
+        # get time span input
+        time_span = self.date_range_but.get()
+        print(f'using timespan: {time_span}')
+
+
         print("Previous ticker:", self.ticker)
         print("New ticker:", user_in)
 
         self.ticker = user_in
 
         _, self.sector_category = get_data.gather_sector_news(self.ticker) 
-        self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=30))
-        self.sector_news = get_data.google_news_feed(self.sector_category)
+        self.company_news = get_data.gather_headlines(self.ticker, date.today()-timedelta(days=int(time_span[:2])))
+        self.sector_news = get_data.google_news_feed(self.sector_category, time_span)
 
         print("Company articles:", len(self.company_news))
         print("Sector articles:", len(self.sector_news))
